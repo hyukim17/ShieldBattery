@@ -18,8 +18,10 @@
 //! [`Resimulation`]).
 //!
 //! The memory is bounded: [`MAX_SAMPLES`] rows of samples, past which the older half of the game
-//! is kept at half the detail, and [`MAX_EVENTS`] timeline entries.
+//! is kept at half the detail, and [`MAX_EVENTS`] timeline entries. Every kill by a building is
+//! kept, and there are never more of those than units killed.
 
+mod building_kills;
 mod deaths;
 mod engagements;
 mod snapshot;
@@ -31,6 +33,7 @@ use std::collections::VecDeque;
 use bw_dat::{TechId, UnitId, UpgradeId};
 use overlay_ui::observer::{GraphSeries, Significance, TimelineEventKind};
 
+pub(crate) use building_kills::set_counted as set_building_kills_counted;
 pub(crate) use deaths::Death;
 pub(crate) use snapshot::{
     GameSnapshot, SCORE_UNITS_KILLED, SCORE_UNITS_LOST, SCORE_UNITS_PRODUCED, control_group_units,
@@ -195,6 +198,8 @@ pub struct GameStats {
     events: Vec<TimelineEvent>,
     /// Every unit seen to die, sorted by frame.
     deaths: Vec<Death>,
+    /// Every unit a building has killed. See [`building_kills`].
+    building_kills: building_kills::BuildingKills,
     /// What the newest samples left behind to be compared against, oldest first.
     baselines: VecDeque<Baseline>,
     /// What each player has on their number keys, replaced whole every sample: a group is what it
@@ -268,6 +273,7 @@ impl GameStats {
             rows: Vec::new(),
             events: Vec::new(),
             deaths: Vec::new(),
+            building_kills: building_kills::BuildingKills::default(),
             baselines: VecDeque::new(),
             control_groups: Default::default(),
             vision: None,
@@ -297,8 +303,8 @@ impl GameStats {
         self.end_frame = end_frame;
     }
 
-    /// Takes a sample of the frame the simulation just stepped to, if one is due on it, through
-    /// `read`.
+    /// Records the kills buildings made in the step that just ended on `frame`, and takes a sample
+    /// of that frame, if one is due on it, through `read`.
     pub fn step(
         &mut self,
         frame: u32,
@@ -306,6 +312,7 @@ impl GameStats {
         catalog: &impl UnitCatalog,
         read: impl FnOnce() -> GameSnapshot,
     ) {
+        self.building_kills.finish_step(frame, resimulation);
         if frame.is_multiple_of(SAMPLE_INTERVAL_FRAMES) {
             self.apply(read(), resimulation, catalog);
         }
@@ -477,8 +484,15 @@ impl GameStats {
         StatsAsOf {
             rows: &self.rows[..self.rows.partition_point(|row| row.frame <= frame)],
             events: &self.events[..self.events.partition_point(|event| event.frame <= frame)],
+            building_kills: self.building_kills.up_to(frame),
             stats: self,
         }
+    }
+
+    /// Notes a kill by the building with unique id `building` in the step under way, which
+    /// [`step`](Self::step) records once the step is over.
+    pub fn note_building_kill(&mut self, building: u32) {
+        self.building_kills.note(building);
     }
 }
 
@@ -535,6 +549,7 @@ impl GameStats {
 pub struct StatsAsOf<'a> {
     rows: &'a [SampleRow],
     events: &'a [TimelineEvent],
+    building_kills: &'a [building_kills::BuildingKill],
     stats: &'a GameStats,
 }
 
@@ -553,6 +568,12 @@ impl<'a> StatsAsOf<'a> {
             changed: self.stats.events_changed,
             shown: self.events.len(),
         }
+    }
+
+    /// How many units the building with unique id `building` has killed, or `None` where buildings'
+    /// kills are not being counted.
+    pub fn building_kills(&self, building: u32) -> Option<u32> {
+        building_kills::counted().then(|| building_kills::count(self.building_kills, building))
     }
 
     /// How much of the map each player could see as of the last sample.
@@ -1623,6 +1644,23 @@ mod tests {
             marine_dying_at(11 * SECOND + 5),
         );
         assert_eq!(death_frames(&stats), [(12 * SECOND, unit::MARINE)]);
+    }
+
+    #[test]
+    fn a_buildings_kills_are_read_from_the_step_that_made_them_until_the_game_is_forgotten() {
+        const CANNON: u32 = 0x2001;
+        building_kills::set_counted();
+        let mut stats = GameStats::new();
+        stats.note_building_kill(CANNON);
+        // Off the sampling grid, so the step records the kill without reading a sample.
+        stats.step(5, Resimulation::Identical, &FakeUnits::standard(), || {
+            unreachable!("no sample is due on frame 5")
+        });
+
+        assert_eq!(stats.as_of(4).building_kills(CANNON), Some(0));
+        assert_eq!(stats.as_of(5).building_kills(CANNON), Some(1));
+        stats.clear();
+        assert_eq!(stats.as_of(5).building_kills(CANNON), Some(0));
     }
 
     /// A game where player 0's thirty hydralisks all die at `dies_at`, to player 1's marine

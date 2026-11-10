@@ -144,7 +144,7 @@ impl ObserverViewCache {
         let team_cards = (matchup.form() == overlay_ui::observer::MatchupForm::ClockOnly)
             .then(|| build_team_cards_view(&matchup, &players, stats));
         let control_groups = build_control_groups_view(bw, &players, stats);
-        let selection = build_selection_view(bw, &players);
+        let selection = build_selection_view(bw, &players, stats);
         let map_control = build_map_control_view(&matchup, stats);
         let mut cache = match previous {
             Some(mut cache) => {
@@ -572,7 +572,11 @@ fn build_control_groups_view(
 ///
 /// Read straight off the selection rather than off the sampler, so the panel changes in the same
 /// frame the click does.
-fn build_selection_view(bw: &BwVars, players: &[StatsPlayer]) -> SelectionView {
+fn build_selection_view(
+    bw: &BwVars,
+    players: &[StatsPlayer],
+    stats: Option<&StatsAsOf<'_>>,
+) -> SelectionView {
     let selected: Vec<Unit> = bw
         .client_selection
         .iter()
@@ -584,7 +588,7 @@ fn build_selection_view(bw: &BwVars, players: &[StatsPlayer]) -> SelectionView {
     SelectionView {
         units: selected
             .into_iter()
-            .map(|unit| selected_unit_view(bw, players, unit, alone))
+            .map(|unit| selected_unit_view(bw, players, stats, unit, alone))
             .collect(),
     }
 }
@@ -596,10 +600,14 @@ fn build_selection_view(bw: &BwVars, players: &[StatsPlayer]) -> SelectionView {
 fn selected_unit_view(
     bw: &BwVars,
     players: &[StatsPlayer],
+    stats: Option<&StatsAsOf<'_>>,
     unit: Unit,
     alone: bool,
 ) -> SelectedUnitView {
     let mut view = carried_unit_view(bw, players, unit);
+    if unit.id().is_building() {
+        view.kills = building_kills(bw, stats, unit);
+    }
     view.production = production::selected_production(unit, bw);
     if alone {
         view.cargo = cargo_views(bw, players, unit);
@@ -766,7 +774,9 @@ fn carried_unit_view(bw: &BwVars, players: &[StatsPlayer], unit: Unit) -> Select
                 )
             })
         }),
-        kills: unit.kills(),
+        // The game counts no kills for a building. A selected one has them counted by the panels
+        // instead (`building_kills`), and nothing a unit carries is a building.
+        kills: (!unit_id.is_building()).then(|| unit.kills()),
         status: None,
         hallucination: unit.is_hallucination(),
         // Read only off a finished unit, as the console reads them.
@@ -844,6 +854,18 @@ fn max_energy(bw: &BwVars, unit: Unit) -> u32 {
     } else {
         UNUPGRADED_MAX_ENERGY
     }
+}
+
+/// How many units `unit`, a building, has killed, as the observer panels count them: the game
+/// counts none for a building. Only for one with a weapon of its own, as nothing else a building
+/// does kills: a bunker's passengers make its kills, and keep them. `None` for any other building,
+/// and wherever buildings' kills are not being counted.
+fn building_kills(bw: &BwVars, stats: Option<&StatsAsOf<'_>>, unit: Unit) -> Option<u32> {
+    let unit_id = unit.id();
+    if unit_id.ground_weapon().is_none() && unit_id.air_weapon().is_none() {
+        return None;
+    }
+    stats?.building_kills(bw.units.as_ref()?.to_unique_id(unit))
 }
 
 /// Whole hit points out of the game's 8.8 fixed-point value.

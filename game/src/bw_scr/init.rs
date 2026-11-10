@@ -222,6 +222,7 @@ impl BwScr {
             .ok_or("sprites_by_y_tile_end")?;
         let step_game = analysis.step_game().ok_or("step_game")?;
         let update_unit_visibility = analysis.update_unit_visibility();
+        let damage_unit = analysis.damage_unit();
         let replay_skins = super::replay_skins::ReplaySkins::new(&mut analysis, ctx);
         let free_sprites = LinkedList {
             start: Value::new(
@@ -868,6 +869,7 @@ impl BwScr {
             unit_cost_cache,
             step_game,
             update_unit_visibility,
+            damage_unit,
             replay_skins,
             step_io,
             init_game_data,

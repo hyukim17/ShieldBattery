@@ -378,6 +378,7 @@ pub struct BwScr {
     init_unit_data: VirtualAddress,
     step_game: VirtualAddress,
     update_unit_visibility: Option<VirtualAddress>,
+    damage_unit: Option<VirtualAddress>,
     replay_skins: Option<replay_skins::ReplaySkins>,
     step_network_addr: VirtualAddress,
     step_replay_commands: VirtualAddress,
@@ -3166,6 +3167,59 @@ impl BwScr {
                 );
                 #[cfg(debug_assertions)]
                 dump_game_stats(&stats);
+            }
+        }
+    }
+
+    /// The building dealing damage to `target`, when `attacker` is one and `target` is an enemy
+    /// still alive, so that [`note_building_kill`](Self::note_building_kill) can count the kill if
+    /// the damage is one. The game counts no kills for a building, and the observer panels read
+    /// them out for buildings with weapons of their own.
+    ///
+    /// `None` for any other damage, which is nearly all of it, and for all of it unless the local
+    /// client is watching rather than playing, as nothing else reads the count. A bunker is never
+    /// the attacker: the damage is its passengers', and so are the kills.
+    unsafe fn building_attacking(
+        &self,
+        target: *mut bw::Unit,
+        attacker: *mut bw::Unit,
+    ) -> Option<Unit> {
+        if !self.game_started.load(Ordering::Acquire) || !self.is_replay_or_obs() {
+            return None;
+        }
+        unsafe {
+            let attacker = Unit::from_ptr(attacker)?;
+            if !attacker.id().is_building() {
+                return None;
+            }
+            let target = Unit::from_ptr(target)?;
+            let game = self.game();
+            if game.is_null() || target.hitpoints() <= 0 {
+                return None;
+            }
+            let game = bw_dat::Game::from_ptr(game);
+            (!game.allied(attacker.player(), target.player())).then_some(attacker)
+        }
+    }
+
+    /// Counts a kill for `building` if the damage it just dealt `target` killed it. The game sets a
+    /// unit's hit points to zero as the damage that kills it lands, and no other damage leaves it
+    /// there.
+    unsafe fn note_building_kill(&self, target: *mut bw::Unit, building: Unit) {
+        unsafe {
+            let Some(target) = Unit::from_ptr(target) else {
+                return;
+            };
+            if target.hitpoints() > 0 {
+                return;
+            }
+            let vector = self.units.resolve();
+            if vector.is_null() {
+                return;
+            }
+            let units = bw_dat::UnitArray::new((*vector).data as *mut bw::Unit, (*vector).length);
+            if let Some(mut stats) = self.game_stats.lock() {
+                stats.note_building_kill(units.to_unique_id(building));
             }
         }
     }
@@ -6455,6 +6509,13 @@ mod hooks {
     // its fog sprite. The unit in ecx on 32-bit.
     thiscall_hooks!(
         !0 => UpdateUnitVisibility(*mut bw::Unit);
+    );
+
+    // Deals damage to a unit (in ecx on 32-bit) on behalf of the attacking unit, null for damage
+    // no unit dealt, and the attacking player, a byte in a full argument slot. The damage is in
+    // 256ths of a hit point, and the last argument is a C bool, also in a full argument slot.
+    thiscall_hooks!(
+        !0 => DamageUnit(*mut bw::Unit, i32, *mut bw::Unit, u32, u32);
     );
 
     system_hooks!(

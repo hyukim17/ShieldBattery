@@ -478,6 +478,23 @@ impl BwScr {
                     "Remembered buildings aren't kept: visibility or skin map analysis missing"
                 ),
             }
+            match self.damage_unit {
+                Some(address) => {
+                    exe.hook_closure_address(
+                        DamageUnit,
+                        move |target, damage, attacker, player, notify, orig| {
+                            let building = self.building_attacking(target, attacker);
+                            orig(target, damage, attacker, player, notify);
+                            if let Some(building) = building {
+                                self.note_building_kill(target, building);
+                            }
+                        },
+                        address.0 as usize - base,
+                    );
+                    super::game_stats::set_building_kills_counted();
+                }
+                None => info!("Buildings' kills aren't counted: damage_unit analysis missing"),
+            }
             let address = self.step_network_addr.0 as usize - base;
             exe.hook_closure_address(
                 StepNetwork,
