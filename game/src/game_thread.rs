@@ -1037,6 +1037,19 @@ pub unsafe fn before_init_unit_data(bw: &BwScr) {
     }
 }
 
+/// Bw impl is expected to hook the point after init_unit_data and call this. init_unit_data loads
+/// units.dat afresh each time a game starts, including when SC:R restarts a replay to seek in it,
+/// so the logic fixes that change units.dat write it here and a game without them plays with
+/// units.dat as loaded. Keyframe seeks don't run init_unit_data, and need not: a process plays a
+/// single game or replay, so what is written here holds for all of it.
+pub unsafe fn after_init_unit_data(bw: &BwScr) {
+    unsafe {
+        if logic_fix_active(LogicFix::CocoonFlyerCarapace) {
+            bw.set_armor_upgrade(bw_dat::unit::COCOON, bw_dat::upgrade::FLYER_CARAPACE);
+        }
+    }
+}
+
 /// Team game max supplies (twice the displayed value), indexed `[race][player]` like
 /// `Game::supplies[race].max`, as BW's own team game init sets them: each team's main player gets
 /// 400 per team slot holding that race, and at least 400. Every other player gets 0.

@@ -9,7 +9,7 @@ use std::sync::atomic::{AtomicBool, AtomicI32, AtomicU8, AtomicU32, AtomicUsize,
 use std::sync::{Arc, OnceLock};
 use std::time::{Duration, Instant};
 
-use bw_dat::UnitId;
+use bw_dat::{UnitId, UpgradeId};
 use byteorder::{ByteOrder, LittleEndian};
 use libc::c_void;
 use overlay_ui::net_quality::NetQualityView;
@@ -376,6 +376,9 @@ pub struct BwScr {
     step_io: VirtualAddress,
     init_game_data: VirtualAddress,
     init_unit_data: VirtualAddress,
+    /// SC:R's units.dat table header for the armor upgrade field. bw_dat has no write API; its copy
+    /// of this header holds the same data pointer, so bw_dat reads see what is written through it.
+    units_dat_armor_upgrade: SendPtr<*const bw::DatTable>,
     step_game: VirtualAddress,
     update_unit_visibility: Option<VirtualAddress>,
     replay_skins: Option<replay_skins::ReplaySkins>,
@@ -3238,6 +3241,18 @@ impl BwScr {
             let count =
                 usize::from((*game).map_width_tiles) * usize::from((*game).map_height_tiles);
             std::ptr::write_bytes(tiles, 0, count);
+        }
+    }
+
+    /// Makes `upgrade` the armor upgrade of units of kind `unit` until init_unit_data next loads
+    /// units.dat.
+    pub unsafe fn set_armor_upgrade(&self, unit: UnitId, upgrade: UpgradeId) {
+        unsafe {
+            let table = self.units_dat_armor_upgrade.0;
+            assert!(u32::from(unit.0) < (*table).entries);
+            let upgrade = u8::try_from(upgrade.0).expect("units.dat holds upgrade ids in a byte");
+            // SAFETY: init checked that the field holds one byte per entry.
+            *((*table).data as *mut u8).add(usize::from(unit.0)) = upgrade;
         }
     }
 

@@ -777,6 +777,7 @@ impl BwScr {
                     self.clear_map_tiles_before_map_load();
                     game_thread::before_init_unit_data(self);
                     log_time("init_unit_data", || orig());
+                    game_thread::after_init_unit_data(self);
                 },
                 address,
             );

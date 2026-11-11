@@ -24,7 +24,7 @@ pub const SECTION_ID: u32 = 0x74616253; // Sbat
 /// Version 2 changed no game logic. Replays from it on have UMS user selectable slots saved
 /// correctly, which was broken in SB replays before that; nothing currently needs to know this,
 /// but it makes it easy to tell if anything does in future.
-pub const GAME_LOGIC_VERSION: u16 = 0x6;
+pub const GAME_LOGIC_VERSION: u16 = 0x7;
 
 /// A change ShieldBattery makes to how BW plays. Each one makes some games simulate differently
 /// than they would in StarCraft: Remastered alone, so a game (or replay) applies a fix only if its
@@ -48,15 +48,20 @@ pub enum LogicFix {
     /// Units given somewhere to go while an attack had stalled them mid-move start walking again
     /// (`game_thread::restart_stalled_walk`).
     RestartStalledWalk,
+    /// Cocoons take Zerg Flyer Carapace armor upgrades, like the mutalisk they morph from and every
+    /// other Zerg flyer, rather than the ground Zerg Carapace upgrades units.dat gives them
+    /// (`game_thread::after_init_unit_data`).
+    CocoonFlyerCarapace,
 }
 
 impl LogicFix {
-    pub const ALL: [LogicFix; 5] = [
+    pub const ALL: [LogicFix; 6] = [
         LogicFix::OrderQueueLimits,
         LogicFix::GasWorkerUnwalkableExit,
         LogicFix::NoneUnitCostMatches64Bit,
         LogicFix::HarvestCollisionRestore,
         LogicFix::RestartStalledWalk,
+        LogicFix::CocoonFlyerCarapace,
     ];
 
     /// The game logic version that introduced this fix.
@@ -67,6 +72,7 @@ impl LogicFix {
             LogicFix::NoneUnitCostMatches64Bit => 4,
             LogicFix::HarvestCollisionRestore => 5,
             LogicFix::RestartStalledWalk => 6,
+            LogicFix::CocoonFlyerCarapace => 7,
         }
     }
 
@@ -81,6 +87,7 @@ impl LogicFix {
     pub const fn disable_bit(self) -> Option<u32> {
         match self {
             LogicFix::RestartStalledWalk => Some(1 << 0),
+            LogicFix::CocoonFlyerCarapace => Some(1 << 1),
             LogicFix::OrderQueueLimits
             | LogicFix::GasWorkerUnwalkableExit
             | LogicFix::NoneUnitCostMatches64Bit
@@ -402,6 +409,14 @@ fn test_parse_newer_format() {
 fn game_logic_version_is_newest_fix() {
     let newest = LogicFix::ALL.iter().map(|fix| fix.introduced_in()).max();
     assert_eq!(newest, Some(GAME_LOGIC_VERSION));
+}
+
+#[test]
+fn cocoon_flyer_carapace_is_off_in_starcraft_compatible_games() {
+    // A cocoon hit while its owner has a level of either carapace upgrade takes different damage
+    // with the fix, so a normal Zerg game's replay plays back the same elsewhere only without it.
+    let bit = LogicFix::CocoonFlyerCarapace.disable_bit();
+    assert!(bit.is_some_and(|bit| LogicFix::starcraft_compatible_mask() & bit != 0));
 }
 
 #[test]

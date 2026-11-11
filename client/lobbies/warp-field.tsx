@@ -29,6 +29,11 @@ function warpFieldFixes(t: TFunction): string[] {
       'Units no longer get stuck in place after an attack, ignoring orders to move until told to ' +
         'stop.',
     ),
+    t(
+      'lobbies.warpField.fixCocoonArmor',
+      'Cocoons get their armor upgrades from Zerg Flyer Carapace, like every other Zerg air ' +
+        'unit, instead of from Zerg Carapace.',
+    ),
   ]
 }
 

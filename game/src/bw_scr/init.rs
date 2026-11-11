@@ -669,6 +669,7 @@ impl BwScr {
         let netcode_v2 = NetcodeV2Bw::analyze(&mut analysis, ctx)?;
 
         init_bw_dat(&mut analysis)?;
+        let units_dat_armor_upgrade = units_dat_armor_upgrade(&mut analysis)?;
 
         debug!("Found all necessary BW data");
 
@@ -872,6 +873,7 @@ impl BwScr {
             step_io,
             init_game_data,
             init_unit_data,
+            units_dat_armor_upgrade: SendPtr(units_dat_armor_upgrade),
             game_command_lengths,
             prism_pixel_shaders,
             prism_renderer_vtable,
@@ -1003,17 +1005,14 @@ fn init_bw_dat(analysis: &mut scr_analysis::Analysis<'_>) -> Result<(), &'static
         entries: usize,
     ) {
         unsafe {
-            // Dat tables in SC:R memory have at least one extra field, bw_dat expects
-            // 1.16.1 compatible format.
-            let mut value = resolve_operand(table.address, &[]) as *const u8;
-            for _ in 0..entries {
-                let bw_table = value as *mut bw::DatTable;
+            // bw_dat expects 1.16.1 compatible format.
+            for field in 0..entries {
+                let bw_table = scr_dat_field(table, field);
                 out.push(bw::DatTable {
                     data: (*bw_table).data,
                     entry_size: (*bw_table).entry_size,
                     entries: (*bw_table).entries,
                 });
-                value = value.add(table.entry_size as usize);
             }
         }
     }
@@ -1052,6 +1051,34 @@ fn init_bw_dat(analysis: &mut scr_analysis::Analysis<'_>) -> Result<(), &'static
         bw_dat::set_bw_malloc(bw_malloc, bw_free);
     }
     Ok(())
+}
+
+/// The header of field `field` in an SC:R dat table. SC:R's headers have at least one extra field
+/// on top of BW 1.16.1's `bw::DatTable`, so they are `table.entry_size` bytes apart.
+unsafe fn scr_dat_field(
+    table: &scr_analysis::DatTablePtr<'_>,
+    field: usize,
+) -> *const bw::DatTable {
+    unsafe {
+        (resolve_operand(table.address, &[]) + field * table.entry_size as usize)
+            as *const bw::DatTable
+    }
+}
+
+/// SC:R's units.dat table header for the armor upgrade field, checked to hold a byte for every
+/// unit id as BW 1.16.1's units.dat does.
+fn units_dat_armor_upgrade(
+    analysis: &mut scr_analysis::Analysis<'_>,
+) -> Result<*const bw::DatTable, &'static str> {
+    const ARMOR_UPGRADE_FIELD: usize = 25;
+    let units = analysis.dat_table(DatType::Units).ok_or("units.dat")?;
+    unsafe {
+        let table = scr_dat_field(&units, ARMOR_UPGRADE_FIELD);
+        if (*table).entry_size != 1 || (*table).entries < u32::from(bw_dat::unit::NONE.0) {
+            return Err("units.dat armor upgrade field");
+        }
+        Ok(table)
+    }
 }
 
 pub(super) unsafe extern "C" fn bw_malloc(size: usize) -> *mut u8 {
