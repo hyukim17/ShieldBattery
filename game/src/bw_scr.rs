@@ -3221,14 +3221,6 @@ impl BwScr {
             if let Some(mut stats) = self.game_stats.lock() {
                 stats.note_building_kill(units.to_unique_id(building));
             }
-            // TODO(building-kills): drop once a game shows whether SC:R keeps a building's own
-            // kill count at zero; if it counts there, read that instead of counting here.
-            debug!(
-                "Counted a kill for building {:#x} of {:#x}; the game's own kill count for it is {}",
-                building.id().0,
-                target.id().0,
-                building.kills()
-            );
         }
     }
 
