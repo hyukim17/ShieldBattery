@@ -545,6 +545,10 @@ impl<'e> Analysis<'e> {
         self.0.update_unit_visibility()
     }
 
+    pub fn damage_unit(&mut self) -> Option<VirtualAddress> {
+        self.0.damage_unit()
+    }
+
     pub fn unit_skin_map(&mut self) -> Option<Operand<'e>> {
         self.0.unit_skin_map()
     }
