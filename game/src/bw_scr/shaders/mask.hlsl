@@ -22,7 +22,9 @@ cbuffer constants
     // Mask value of never-explored terrain: 1.0 for players, 218/255 for observers and replays
     // (BW's fog curve caps their darkness lower).
     float unexploredMask;
-    float _unused;
+    // The least fog any terrain gets, visible terrain included, as a fraction of EXPLORED_MASK: set
+    // for the minimap, and 0 for the game view.
+    float terrainDim;
     // Map pixel at texCoord (0, 0), and how many map pixels the texture spans: the game screen
     // for the main view, the whole map for the minimap. Anchors the grain to the map and, through
     // its screen-space derivative, tells how large a map pixel is on screen.
@@ -228,9 +230,11 @@ PS_OUTPUT main(VS_OUTPUT v)
     float4 offMapCover = float4(0.0, 0.0, 0.0, 1.0 - onMap);
 
     float3 stallColor = showNetworkStalled * float3(0.16, 0.08, 0.16);
+    float dim = terrainDim * EXPLORED_MASK;
     if (useNewMask == 0.0)
     {
-        float4 nativeColor = float4(stallColor, mask.Sample(maskSampler, v.texCoord).x);
+        float nativeAlpha = max(mask.Sample(maskSampler, v.texCoord).x, dim);
+        float4 nativeColor = float4(stallColor, nativeAlpha);
         o.frag_color = over(offMapCover, nativeColor);
         return o;
     }
@@ -250,8 +254,9 @@ PS_OUTPUT main(VS_OUTPUT v)
         unexploredDensity = saturate(unexploredAlpha + grain(mapPos, screenPxPerMapPx) * sigma);
     }
 
-    // Visible and explored terrain keep BW's own mask values.
-    float4 color = float4(stallColor, lerp(min(maskValue, EXPLORED_MASK), unexploredDensity, unexplored));
+    // Visible and explored terrain keep BW's own mask values, raised to at least dim.
+    float fogAlpha = lerp(min(maskValue, EXPLORED_MASK), unexploredDensity, unexplored);
+    float4 color = float4(stallColor, max(fogAlpha, dim));
 
     float boundaryLevel = (EXPLORED_MASK + unexploredMask) * 0.5;
     // The mask quads are axis-aligned, so each axis' uv per screen pixel is independent.

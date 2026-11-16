@@ -11,9 +11,10 @@
 
 use overlay_ui::options::{
     ANNOUNCERS, APM_ALERT_VALUE, BRIGHTNESS, CONSOLE_SKINS, CURSOR_SIZE_EIGHTHS, DisplayMode,
-    FPS_LIMIT, FramePacing, GRAB_PAN_SENSITIVITY, MOUSE_SENSITIVITY, MinimapColorMode,
-    MinimapPosition, MinimapTerrain, NamedChoice, OptionsView, ROLLBACK_TARGET, SCROLL_SPEED,
-    SD_GRAPHICS_FILTER, SettingChange, StartingFog, UNIT_SKINS, UnitPortraits, VOLUME,
+    FPS_LIMIT, FramePacing, GRAB_PAN_SENSITIVITY, MINIMAP_TERRAIN_DIM, MOUSE_SENSITIVITY,
+    MinimapColorMode, MinimapPosition, MinimapTerrain, NamedChoice, OptionsView, ROLLBACK_TARGET,
+    SCROLL_SPEED, SD_GRAPHICS_FILTER, SettingChange, StartingFog, UNIT_SKINS, UnitPortraits,
+    VOLUME,
 };
 use serde_json::{Map, Value};
 
@@ -261,6 +262,11 @@ pub fn options_view_from_settings(
             }
         },
     );
+    view.minimap_terrain_dim = settings
+        .number(Source::Local, "minimapTerrainDim")
+        .map_or(view.minimap_terrain_dim, |value| {
+            MINIMAP_TERRAIN_DIM.clamp(value)
+        });
     view.starting_fog = settings
         .keyed(Source::Local, "startingFog", |value| match value {
             "transparent" => Some(StartingFog::ShowTerrainAndResources),
@@ -404,6 +410,7 @@ pub fn app_setting(change: SettingChange) -> Option<AppSetting> {
             "minimapTerrainHidden",
             (terrain == MinimapTerrain::Hidden).into(),
         ),
+        SettingChange::MinimapTerrainDim(percent) => local("minimapTerrainDim", percent.into()),
         SettingChange::StartingFog(fog) => local("startingFog", starting_fog_id(fog).into()),
         SettingChange::MinimapColorMode(mode) => {
             local("minimapColorMode", minimap_color_mode_value(mode).into())
@@ -845,6 +852,7 @@ mod tests {
             "useCustomCursorSize": true,
             "customCursorSize": 0.625,
             "minimapTerrainHidden": true,
+            "minimapTerrainDim": 40,
             "startingFog": "legacy",
             "minimapColorMode": 2,
             "monitorId": 2_528_732_444u64,
@@ -914,6 +922,7 @@ mod tests {
             SettingChange::ShowLatency(true),
             SettingChange::MinimapPosition(MinimapPosition::BottomLeft),
             SettingChange::MinimapTerrain(MinimapTerrain::Hidden),
+            SettingChange::MinimapTerrainDim(35),
             SettingChange::StartingFog(StartingFog::Legacy),
             SettingChange::MinimapColorMode(MinimapColorMode::PresetOnMinimapOnly),
             SettingChange::ApmDisplayOn(true),
@@ -1024,6 +1033,7 @@ mod tests {
             show_latency: true,
             minimap_position: MinimapPosition::BottomLeft,
             minimap_terrain: MinimapTerrain::Hidden,
+            minimap_terrain_dim: 40,
             starting_fog: StartingFog::Legacy,
             minimap_color_mode: MinimapColorMode::Preset,
             apm_display_on: true,

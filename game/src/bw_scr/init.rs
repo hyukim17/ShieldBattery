@@ -787,6 +787,7 @@ impl BwScr {
             grab_pan_sensitivity_on: AtomicBool::new(false),
             grab_pan_gain: AtomicU32::new(1.0f32.to_bits()),
             grab_pan_inverted: AtomicBool::new(false),
+            minimap_terrain_dim: AtomicU32::new(0),
             game_screen_width_bwpx: Value::new(ctx, game_screen_width_bwpx),
             game_screen_height_bwpx: Value::new(ctx, game_screen_height_bwpx),
             zoom: Value::new(ctx, zoom),

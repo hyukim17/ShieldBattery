@@ -748,6 +748,8 @@ impl BwScr {
                     let tileset = (*self.game()).tileset;
                     let vertex_buffer = self.vertex_buffer.resolve();
                     let brightness_exponent = crate::forge::gamma::shader_brightness_exponent();
+                    let minimap_terrain_dim =
+                        self.minimap_terrain_dim.load(Ordering::Relaxed) as f32 / 100.0;
                     for i in 0..draw_command_count {
                         let cmd = &raw mut (*commands).commands[i];
                         if BRIGHTNESS_SHADER_IDS.contains(&(*cmd).shader_id) {
@@ -776,6 +778,7 @@ impl BwScr {
                             c[0] = use_new_mask;
                             c[1] = show_network_stalled;
                             c[2] = unexplored_mask;
+                            c[3] = if is_minimap { minimap_terrain_dim } else { 0.0 };
                             c[4..6].copy_from_slice(&origin);
                             c[6..8].copy_from_slice(&span);
                             c[17..19].copy_from_slice(&map_span);

@@ -527,6 +527,8 @@ pub struct BwScr {
     /// touchpad-style "natural" scrolling. Only takes effect while the custom sensitivity is on,
     /// since the built-in pan behavior runs untouched otherwise.
     grab_pan_inverted: AtomicBool,
+    /// The minimap's terrain dim; see [`overlay_ui::options::MINIMAP_TERRAIN_DIM`].
+    minimap_terrain_dim: AtomicU32,
     visualize_network_stalls: AtomicBool,
     is_processing_game_commands: AtomicBool,
     /// True if the network is currently stalled (updated whenever `step_network` is called).
@@ -3402,6 +3404,9 @@ impl BwScr {
             SettingChange::GrabPanInverted(on) => {
                 self.grab_pan_inverted.store(on, Ordering::Release);
             }
+            SettingChange::MinimapTerrainDim(percent) => {
+                self.minimap_terrain_dim.store(percent, Ordering::Release);
+            }
             SettingChange::MinimapTerrain(terrain) => {
                 let hidden = terrain == overlay_ui::options::MinimapTerrain::Hidden;
                 self.saved_minimap_terrain_hidden
@@ -4798,11 +4803,14 @@ impl bw::Bw for BwScr {
         // its own terms: a launch names it by the desktop rectangle it covers, and the list the
         // screen picks from is this machine's rather than anything the app sent.
         let (displays, launched_monitor) = monitors::displays(settings.monitor_bounds);
-        *self.options.lock() = draw_overlay::options::options_view_from_settings(
+        let options = draw_overlay::options::options_view_from_settings(
             &settings.scr,
             &settings.local,
             launched_monitor,
         );
+        self.minimap_terrain_dim
+            .store(options.minimap_terrain_dim, Ordering::Release);
+        *self.options.lock() = options;
         *self.option_lists.lock() = Arc::new(overlay_ui::options::OptionsLists {
             monitors: displays,
             ..overlay_ui::options::OptionsLists::default()

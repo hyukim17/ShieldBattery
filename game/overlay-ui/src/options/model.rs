@@ -78,6 +78,15 @@ pub const BRIGHTNESS: SliderRange = SliderRange {
     step: 5,
 };
 
+/// How far the minimap's terrain is dimmed, as a percentage of explored fog's darkness: 0 leaves it
+/// as it is, and 100 would make it as dark as explored fog. Stops short of 100, so terrain units
+/// can see stays lighter than fogged terrain. The app's `MAX_MINIMAP_TERRAIN_DIM` must match.
+pub const MINIMAP_TERRAIN_DIM: SliderRange = SliderRange {
+    min: 0,
+    max: 75,
+    step: 5,
+};
+
 /// The frame cap, once one is asked for.
 pub const FPS_LIMIT: SliderRange = SliderRange {
     min: 100,
@@ -506,6 +515,8 @@ pub struct OptionsView {
     pub show_latency: bool,
     pub minimap_position: MinimapPosition,
     pub minimap_terrain: MinimapTerrain,
+    /// See [`MINIMAP_TERRAIN_DIM`].
+    pub minimap_terrain_dim: u32,
     pub starting_fog: StartingFog,
     pub minimap_color_mode: MinimapColorMode,
     pub apm_display_on: bool,
@@ -578,6 +589,7 @@ impl Default for OptionsView {
             show_latency: false,
             minimap_position: MinimapPosition::Standard,
             minimap_terrain: MinimapTerrain::Shown,
+            minimap_terrain_dim: 0,
             starting_fog: StartingFog::ShowTerrainAndResources,
             minimap_color_mode: MinimapColorMode::Standard,
             apm_display_on: false,
@@ -649,6 +661,7 @@ impl OptionsView {
             SettingChange::ShowLatency(value) => self.show_latency = value,
             SettingChange::MinimapPosition(value) => self.minimap_position = value,
             SettingChange::MinimapTerrain(value) => self.minimap_terrain = value,
+            SettingChange::MinimapTerrainDim(value) => self.minimap_terrain_dim = value,
             SettingChange::StartingFog(value) => self.starting_fog = value,
             SettingChange::MinimapColorMode(value) => self.minimap_color_mode = value,
             SettingChange::ApmDisplayOn(value) => self.apm_display_on = value,
@@ -792,6 +805,8 @@ pub enum SettingChange {
     MinimapPosition(MinimapPosition),
     /// `local.minimapTerrainHidden`: true when hidden.
     MinimapTerrain(MinimapTerrain),
+    /// `local.minimapTerrainDim`: a percentage; see [`MINIMAP_TERRAIN_DIM`].
+    MinimapTerrainDim(u32),
     /// `local.startingFog`: `'transparent'`, `'showResources'` or `'legacy'`.
     StartingFog(StartingFog),
     /// `local.minimapColorMode`: 0 standard, 1 preset on the minimap only, 2 preset everywhere.
@@ -870,6 +885,7 @@ impl SettingChange {
             SettingChange::ShowLatency(true),
             SettingChange::MinimapPosition(MinimapPosition::BottomLeft),
             SettingChange::MinimapTerrain(MinimapTerrain::Hidden),
+            SettingChange::MinimapTerrainDim(40),
             SettingChange::StartingFog(StartingFog::Legacy),
             SettingChange::MinimapColorMode(MinimapColorMode::PresetOnMinimapOnly),
             SettingChange::ApmDisplayOn(true),
@@ -991,6 +1007,7 @@ mod tests {
             (VOLUME, view.music_volume),
             (VOLUME, view.sound_volume),
             (BRIGHTNESS, view.brightness),
+            (MINIMAP_TERRAIN_DIM, view.minimap_terrain_dim),
             (FPS_LIMIT, view.fps_limit),
             (SD_GRAPHICS_FILTER, view.sd_graphics_filter),
             (APM_ALERT_VALUE, view.apm_alert_value),

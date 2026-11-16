@@ -9,6 +9,7 @@ import {
   ALL_STARTING_FOG,
   FramePacing,
   LocalSettings,
+  MAX_MINIMAP_TERRAIN_DIM,
   MAX_ROLLBACK_TARGET,
   ScrSettings,
 } from '../../common/settings/local-settings'
@@ -75,6 +76,7 @@ const LOCAL_SETTING_VALIDATORS: Partial<Record<keyof LocalSettings, Validator>> 
   legacyCursorSizing: isBoolean,
   startingFog: isOneOf(ALL_STARTING_FOG),
   minimapTerrainHidden: isBoolean,
+  minimapTerrainDim: isIntegerIn(0, MAX_MINIMAP_TERRAIN_DIM),
   minimapColorMode: isOneOf(ALL_MINIMAP_COLOR_MODES),
   framePacing: isOneOf(ALL_FRAME_PACINGS),
   rollbackTarget: isIntegerIn(0, MAX_ROLLBACK_TARGET),

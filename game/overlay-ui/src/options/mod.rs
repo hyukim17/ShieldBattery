@@ -28,10 +28,10 @@ mod pages;
 
 pub use model::{
     ANNOUNCERS, APM_ALERT_VALUE, BRIGHTNESS, CONSOLE_SKINS, CURSOR_SIZE_EIGHTHS, DisplayMode,
-    FPS_LIMIT, FramePacing, GRAB_PAN_SENSITIVITY, MOUSE_SENSITIVITY, MinimapColorMode,
-    MinimapPosition, MinimapTerrain, MonitorView, NamedChoice, OptionsLists, OptionsView,
-    RECOMMENDED_ROLLBACK_TARGET, ROLLBACK_TARGET, SCROLL_SPEED, SD_GRAPHICS_FILTER, SettingChange,
-    SliderRange, StartingFog, UNIT_SKINS, UnitPortraits, VOLUME,
+    FPS_LIMIT, FramePacing, GRAB_PAN_SENSITIVITY, MINIMAP_TERRAIN_DIM, MOUSE_SENSITIVITY,
+    MinimapColorMode, MinimapPosition, MinimapTerrain, MonitorView, NamedChoice, OptionsLists,
+    OptionsView, RECOMMENDED_ROLLBACK_TARGET, ROLLBACK_TARGET, SCROLL_SPEED, SD_GRAPHICS_FILTER,
+    SettingChange, SliderRange, StartingFog, UNIT_SKINS, UnitPortraits, VOLUME,
 };
 
 use egui::{Align, Context, Id, Key, Layout, Sense, Shape, Stroke, Ui, Vec2, pos2, vec2};

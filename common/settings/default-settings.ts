@@ -40,6 +40,7 @@ export const DEFAULT_LOCAL_SETTINGS: ReadonlyDeep<
   startingFog: StartingFog.ShowTerrainAndResources,
   minimapColorMode: MinimapColorMode.Standard,
   minimapTerrainHidden: false,
+  minimapTerrainDim: 0,
   teamColorPreset: TeamColorPreset.CoolVsWarm,
   ffaColorPreset: FfaColorPreset.Custom,
   teamColorUsage: TeamColorUsage.Always,

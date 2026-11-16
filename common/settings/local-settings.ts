@@ -239,6 +239,12 @@ export interface CustomTeamColors {
 /** The highest rollback target a player can choose (see `LocalSettings.rollbackTarget`). */
 export const MAX_ROLLBACK_TARGET = 4
 
+/**
+ * The most the minimap's terrain can be dimmed (see `LocalSettings.minimapTerrainDim`). Must match
+ * the game's `MINIMAP_TERRAIN_DIM`.
+ */
+export const MAX_MINIMAP_TERRAIN_DIM = 75
+
 export interface LocalSettings extends ShieldBatteryAppSettings {
   runAppAtSystemStart: boolean
   runAppAtSystemStartMinimized: boolean
@@ -315,6 +321,11 @@ export interface LocalSettings extends ShieldBatteryAppSettings {
    * flag (`true` means terrain is blanked on the minimap). Saved/restored across game launches.
    */
   minimapTerrainHidden: boolean
+  /**
+   * How far the minimap's terrain is dimmed so unit dots stand out against it, as a percentage of
+   * explored fog's darkness: from 0 (as it is) up to `MAX_MINIMAP_TERRAIN_DIM`.
+   */
+  minimapTerrainDim: number
   /**
    * Whether to use Blizzard's cursor sizing algorithm (that maxes out at 64px) instead of our fixed
    * version that allows larger cursors and keeps all the cursors the same scale.

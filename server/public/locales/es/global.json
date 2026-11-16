@@ -3083,6 +3083,9 @@
           "shown": "Visible",
           "title": "Terreno del minimapa"
         },
+        "minimapTerrainDim": "Oscurecer terreno visible del minimapa",
+        "minimapTerrainDimHint": "Oscurece el terreno visible del minimapa para que destaquen los puntos de las unidades.",
+        "minimapTerrainDimSdHint": "Solo funciona con gráficos HD.",
         "showBonusSkins": "Mostrar aspectos de bonificación",
         "skins": {
           "description": "Deben comprarse a Blizzard.",

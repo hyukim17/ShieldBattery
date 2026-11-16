@@ -3034,6 +3034,9 @@
           "shown": "Shown",
           "title": "Minimap terrain"
         },
+        "minimapTerrainDim": "Minimap visible terrain dim",
+        "minimapTerrainDimHint": "Darkens the minimap's visible terrain so unit dots stand out.",
+        "minimapTerrainDimSdHint": "Only works with HD graphics.",
         "showBonusSkins": "Show bonus skins",
         "skins": {
           "description": "Must be purchased from Blizzard.",

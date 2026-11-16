@@ -14,6 +14,7 @@ import {
   CustomTeamColors,
   FfaColorPreset,
   getStartingFogLabel,
+  MAX_MINIMAP_TERRAIN_DIM,
   MinimapColorMode,
   StartingFog,
   TeamColorPreset,
@@ -25,7 +26,9 @@ import { CheckBox } from '../../material/check-box'
 import { NumberTextField } from '../../material/number-text-field'
 import { SelectOption } from '../../material/select/option'
 import { Select } from '../../material/select/select'
+import { Slider } from '../../material/slider'
 import { useAppDispatch, useAppSelector } from '../../redux-hooks'
+import { bodySmall } from '../../styles/typography'
 import { mergeLocalSettings, mergeScrSettings } from '../action-creators'
 import {
   FormContainer,
@@ -35,6 +38,13 @@ import {
   SettingsSectionHeader,
 } from '../settings-content'
 import { TeamColorSettings } from './team-color-settings'
+
+/** A muted line explaining the field above it. */
+const FieldHint = styled.div`
+  ${bodySmall};
+  margin-bottom: 16px;
+  color: var(--theme-on-surface-variant);
+`
 
 const BonusSkinsCheckBox = styled(CheckBox)`
   margin-bottom: 8px;
@@ -52,6 +62,7 @@ interface GameplaySettingsModel {
   minimapPosition: boolean
   minimapColorMode: MinimapColorMode
   minimapTerrainHidden: boolean
+  minimapTerrainDim: number
   teamColorPreset: TeamColorPreset
   ffaColorPreset: FfaColorPreset
   teamColorUsage: TeamColorUsage
@@ -96,6 +107,7 @@ export function GameplaySettings() {
         startingFog: localSettings.startingFog,
         minimapColorMode: localSettings.minimapColorMode,
         minimapTerrainHidden: localSettings.minimapTerrainHidden,
+        minimapTerrainDim: localSettings.minimapTerrainDim,
         teamColorPreset: localSettings.teamColorPreset,
         ffaColorPreset: localSettings.ffaColorPreset,
         teamColorUsage: localSettings.teamColorUsage,
@@ -140,6 +152,7 @@ export function GameplaySettings() {
             startingFog: model.startingFog,
             minimapColorMode: model.minimapColorMode,
             minimapTerrainHidden: model.minimapTerrainHidden,
+            minimapTerrainDim: model.minimapTerrainDim,
             teamColorPreset: model.teamColorPreset,
             ffaColorPreset: model.ffaColorPreset,
             teamColorUsage: model.teamColorUsage,
@@ -248,6 +261,28 @@ export function GameplaySettings() {
               text={t('settings.game.gameplay.minimapTerrain.hidden', 'Hidden')}
             />
           </Select>
+          {/*
+            The dim doesn't reach the minimap in SD graphics, so there the slider reads 0 while
+            keeping the value for HD.
+          */}
+          <Slider
+            {...bindCustom('minimapTerrainDim')}
+            value={scrSettings.hdGraphicsOn ? getInputValue('minimapTerrainDim') : 0}
+            label={t('settings.game.gameplay.minimapTerrainDim', 'Minimap visible terrain dim')}
+            tabIndex={0}
+            min={0}
+            max={MAX_MINIMAP_TERRAIN_DIM}
+            step={5}
+            disabled={getInputValue('minimapTerrainHidden') || !scrSettings.hdGraphicsOn}
+          />
+          <FieldHint>
+            {scrSettings.hdGraphicsOn
+              ? t(
+                  'settings.game.gameplay.minimapTerrainDimHint',
+                  "Darkens the minimap's visible terrain so unit dots stand out.",
+                )
+              : t('settings.game.gameplay.minimapTerrainDimSdHint', 'Only works with HD graphics.')}
+          </FieldHint>
           <Select
             {...bindCustom('startingFog')}
             label={t('settings.game.gameplay.startingFog.title', 'Starting fog of war')}

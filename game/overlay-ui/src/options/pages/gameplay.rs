@@ -6,8 +6,9 @@ use crate::options::fields::{
     group_header, group_note, hint, segmented_row, slider_row, stepper_row, switch_row,
 };
 use crate::options::{
-    APM_ALERT_VALUE, CONSOLE_SKINS, MinimapColorMode, MinimapPosition, MinimapTerrain,
-    OptionsOutcome, OptionsView, SettingChange, StartingFog, UNIT_SKINS, UnitPortraits,
+    APM_ALERT_VALUE, CONSOLE_SKINS, MINIMAP_TERRAIN_DIM, MinimapColorMode, MinimapPosition,
+    MinimapTerrain, OptionsOutcome, OptionsView, SettingChange, StartingFog, UNIT_SKINS,
+    UnitPortraits,
 };
 use crate::tr;
 
@@ -80,6 +81,38 @@ pub(super) fn draw(ui: &mut Ui, view: &OptionsView, outcome: &mut OptionsOutcome
         false,
     ) {
         outcome.changes.push(SettingChange::MinimapTerrain(terrain));
+    }
+    // Hidden terrain has nothing left to dim, and the dim doesn't reach the minimap in SD graphics,
+    // where the slider reads 0 while keeping the value for HD.
+    slider_row(
+        ui,
+        &tr!("options.minimapTerrainDim", "Minimap visible terrain dim"),
+        if view.hd_graphics_on {
+            view.minimap_terrain_dim
+        } else {
+            0
+        },
+        MINIMAP_TERRAIN_DIM,
+        view.minimap_terrain == MinimapTerrain::Hidden || !view.hd_graphics_on,
+        outcome,
+        SettingChange::MinimapTerrainDim,
+    );
+    if view.hd_graphics_on {
+        hint(
+            ui,
+            &tr!(
+                "options.minimapTerrainDimHint",
+                "Darkens the minimap's visible terrain so unit dots stand out"
+            ),
+        );
+    } else {
+        hint(
+            ui,
+            &tr!(
+                "options.minimapTerrainDimSdHint",
+                "Only works with HD graphics"
+            ),
+        );
     }
     if let Some(fog) = segmented_row(
         ui,
