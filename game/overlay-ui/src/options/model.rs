@@ -78,15 +78,6 @@ pub const BRIGHTNESS: SliderRange = SliderRange {
     step: 5,
 };
 
-/// How far the minimap's terrain is dimmed, as a percentage of explored fog's darkness: 0 leaves it
-/// as it is, and 100 would make it as dark as explored fog. Stops short of 100, so terrain units
-/// can see stays lighter than fogged terrain. The app's `MAX_MINIMAP_TERRAIN_DIM` must match.
-pub const MINIMAP_TERRAIN_DIM: SliderRange = SliderRange {
-    min: 0,
-    max: 75,
-    step: 5,
-};
-
 /// The frame cap, once one is asked for.
 pub const FPS_LIMIT: SliderRange = SliderRange {
     min: 100,
@@ -99,6 +90,15 @@ pub const SD_GRAPHICS_FILTER: SliderRange = SliderRange {
     min: 0,
     max: 3,
     step: 1,
+};
+
+/// How far the minimap's terrain is dimmed, as a percentage of explored fog's darkness: 0 leaves it
+/// as it is, and 100 would make it as dark as explored fog. Stops short of 100, so terrain units
+/// can see stays lighter than fogged terrain. The app's `MAX_MINIMAP_TERRAIN_DIM` must match.
+pub const MINIMAP_TERRAIN_DIM: SliderRange = SliderRange {
+    min: 0,
+    max: 75,
+    step: 5,
 };
 
 /// The rate the APM alert fires below. The app takes any whole number up to 999 here, typed rather
@@ -1007,9 +1007,9 @@ mod tests {
             (VOLUME, view.music_volume),
             (VOLUME, view.sound_volume),
             (BRIGHTNESS, view.brightness),
-            (MINIMAP_TERRAIN_DIM, view.minimap_terrain_dim),
             (FPS_LIMIT, view.fps_limit),
             (SD_GRAPHICS_FILTER, view.sd_graphics_filter),
+            (MINIMAP_TERRAIN_DIM, view.minimap_terrain_dim),
             (APM_ALERT_VALUE, view.apm_alert_value),
             (ROLLBACK_TARGET, view.rollback_target),
         ] {

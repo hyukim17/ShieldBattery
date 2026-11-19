@@ -28,7 +28,6 @@ import { SelectOption } from '../../material/select/option'
 import { Select } from '../../material/select/select'
 import { Slider } from '../../material/slider'
 import { useAppDispatch, useAppSelector } from '../../redux-hooks'
-import { bodySmall } from '../../styles/typography'
 import { mergeLocalSettings, mergeScrSettings } from '../action-creators'
 import {
   FormContainer,
@@ -38,13 +37,6 @@ import {
   SettingsSectionHeader,
 } from '../settings-content'
 import { TeamColorSettings } from './team-color-settings'
-
-/** A muted line explaining the field above it. */
-const FieldHint = styled.div`
-  ${bodySmall};
-  margin-bottom: 16px;
-  color: var(--theme-on-surface-variant);
-`
 
 const BonusSkinsCheckBox = styled(CheckBox)`
   margin-bottom: 8px;
@@ -261,13 +253,9 @@ export function GameplaySettings() {
               text={t('settings.game.gameplay.minimapTerrain.hidden', 'Hidden')}
             />
           </Select>
-          {/*
-            The dim doesn't reach the minimap in SD graphics, so there the slider reads 0 while
-            keeping the value for HD.
-          */}
+          {/* The dim doesn't reach the minimap in SD graphics. */}
           <Slider
             {...bindCustom('minimapTerrainDim')}
-            value={scrSettings.hdGraphicsOn ? getInputValue('minimapTerrainDim') : 0}
             label={t('settings.game.gameplay.minimapTerrainDim', 'Minimap visible terrain dim')}
             tabIndex={0}
             min={0}
@@ -275,14 +263,6 @@ export function GameplaySettings() {
             step={5}
             disabled={getInputValue('minimapTerrainHidden') || !scrSettings.hdGraphicsOn}
           />
-          <FieldHint>
-            {scrSettings.hdGraphicsOn
-              ? t(
-                  'settings.game.gameplay.minimapTerrainDimHint',
-                  "Darkens the minimap's visible terrain so unit dots stand out.",
-                )
-              : t('settings.game.gameplay.minimapTerrainDimSdHint', 'Only works with HD graphics.')}
-          </FieldHint>
           <Select
             {...bindCustom('startingFog')}
             label={t('settings.game.gameplay.startingFog.title', 'Starting fog of war')}

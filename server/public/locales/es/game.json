@@ -336,7 +336,7 @@
     "minimapTerrain": "Terreno del minimapa",
     "minimapTerrainDim": "Oscurecer terreno visible",
     "minimapTerrainDimHint": "Oscurece el terreno visible del minimapa para que destaquen los puntos de las unidades",
-    "minimapTerrainDimSdHint": "Solo funciona con gráficos HD",
+    "minimapTerrainDimSdHint": "Solo disponible con gráficos HD",
     "minimapTerrainHidden": "Oculto",
     "minimapTerrainShown": "Visible",
     "monitor": "Monitor",

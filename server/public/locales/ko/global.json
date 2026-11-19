@@ -2986,8 +2986,6 @@
           "title": "미니맵 지형"
         },
         "minimapTerrainDim": "미니맵 시야 지형 어둡게",
-        "minimapTerrainDimHint": "미니맵에서 시야 안의 지형을 어둡게 해서 유닛 점이 잘 보이게 합니다.",
-        "minimapTerrainDimSdHint": "HD 그래픽에서만 작동합니다.",
         "showBonusSkins": "보너스 스킨 표시",
         "skins": {
           "description": "블리자드에서 구매해야 합니다.",

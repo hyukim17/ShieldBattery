@@ -495,6 +495,8 @@ pub struct BwScr {
     /// Whether the saved minimap settings have already been applied this game (so we only restore
     /// them once, letting in-game toggles afterwards stick).
     minimap_settings_restored: AtomicBool,
+    /// The minimap's terrain dim; see [`overlay_ui::options::MINIMAP_TERRAIN_DIM`].
+    minimap_terrain_dim: AtomicU32,
     /// Receive steps spent so far waiting to broadcast this client's own skin blob, or
     /// `u32::MAX` once it has been sent (it is sent exactly once per game — see
     /// [`broadcast_local_skin_once`](Self::broadcast_local_skin_once)).
@@ -527,8 +529,6 @@ pub struct BwScr {
     /// touchpad-style "natural" scrolling. Only takes effect while the custom sensitivity is on,
     /// since the built-in pan behavior runs untouched otherwise.
     grab_pan_inverted: AtomicBool,
-    /// The minimap's terrain dim; see [`overlay_ui::options::MINIMAP_TERRAIN_DIM`].
-    minimap_terrain_dim: AtomicU32,
     visualize_network_stalls: AtomicBool,
     is_processing_game_commands: AtomicBool,
     /// True if the network is currently stalled (updated whenever `step_network` is called).

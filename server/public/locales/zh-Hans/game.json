@@ -314,7 +314,7 @@
     "minimapTerrain": "小地图地形",
     "minimapTerrainDim": "小地图可见地形变暗",
     "minimapTerrainDimHint": "调暗小地图上的可见地形，让单位点更醒目",
-    "minimapTerrainDimSdHint": "仅在高清版图像下生效",
+    "minimapTerrainDimSdHint": "仅在高清版图像下可用",
     "minimapTerrainHidden": "隐藏",
     "minimapTerrainShown": "显示",
     "monitor": "显示器",

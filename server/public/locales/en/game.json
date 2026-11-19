@@ -325,7 +325,7 @@
     "minimapTerrain": "Minimap terrain",
     "minimapTerrainDim": "Minimap visible terrain dim",
     "minimapTerrainDimHint": "Darkens the minimap's visible terrain so unit dots stand out",
-    "minimapTerrainDimSdHint": "Only works with HD graphics",
+    "minimapTerrainDimSdHint": "Only available in HD graphics",
     "minimapTerrainHidden": "Hidden",
     "minimapTerrainShown": "Shown",
     "monitor": "Monitor",

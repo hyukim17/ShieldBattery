@@ -82,16 +82,11 @@ pub(super) fn draw(ui: &mut Ui, view: &OptionsView, outcome: &mut OptionsOutcome
     ) {
         outcome.changes.push(SettingChange::MinimapTerrain(terrain));
     }
-    // Hidden terrain has nothing left to dim, and the dim doesn't reach the minimap in SD graphics,
-    // where the slider reads 0 while keeping the value for HD.
+    // Hidden terrain has nothing left to dim, and the dim doesn't reach the minimap in SD graphics.
     slider_row(
         ui,
         &tr!("options.minimapTerrainDim", "Minimap visible terrain dim"),
-        if view.hd_graphics_on {
-            view.minimap_terrain_dim
-        } else {
-            0
-        },
+        view.minimap_terrain_dim,
         MINIMAP_TERRAIN_DIM,
         view.minimap_terrain == MinimapTerrain::Hidden || !view.hd_graphics_on,
         outcome,
@@ -110,7 +105,7 @@ pub(super) fn draw(ui: &mut Ui, view: &OptionsView, outcome: &mut OptionsOutcome
             ui,
             &tr!(
                 "options.minimapTerrainDimSdHint",
-                "Only works with HD graphics"
+                "Only available in HD graphics"
             ),
         );
     }

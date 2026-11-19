@@ -347,7 +347,7 @@
     "minimapTerrain": "Рельеф миникарты",
     "minimapTerrainDim": "Затемнение видимого рельефа",
     "minimapTerrainDimHint": "Затемняет видимый рельеф миникарты, чтобы точки юнитов были заметнее",
-    "minimapTerrainDimSdHint": "Работает только с HD-графикой",
+    "minimapTerrainDimSdHint": "Доступно только с HD-графикой",
     "minimapTerrainHidden": "Скрыт",
     "minimapTerrainShown": "Показан",
     "monitor": "Монитор",
